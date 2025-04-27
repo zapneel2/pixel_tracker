@@ -1,14 +1,14 @@
-const fs = require('fs');
-const path = require('path');
-
 exports.handler = async (event, context) => {
-  // Use the correct path to static folder
-  const filePath = path.resolve(__dirname, '../static/1x1.png'); // Adjust path to where pixel.png is located
-  
+  // Use the URL of the image file served from the static directory
+  const pixelUrl = 'https://gleaming-jalebi-73344d.netlify.app/1x1.png';
+
   try {
-    const pixel = fs.readFileSync(filePath); // Read the pixel image from static folder
+    // Fetch the pixel image from the URL
+    const response = await fetch(pixelUrl);
+    const pixel = await response.buffer(); // Get the image data as a buffer
+
     console.log('Pixel requested from:', event.headers['user-agent']);
-  
+
     return {
       statusCode: 200,
       headers: {
@@ -19,7 +19,7 @@ exports.handler = async (event, context) => {
       isBase64Encoded: true, // Indicate it's base64-encoded
     };
   } catch (error) {
-    console.error("Error reading pixel file:", error);
+    console.error("Error fetching pixel:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: "Failed to serve the tracking pixel." }),
