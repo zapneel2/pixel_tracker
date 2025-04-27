@@ -1,32 +1,33 @@
-const fetch = require('node-fetch'); // Ensure 'node-fetch' is imported if using in Node.js
+const fetch = require('node-fetch');
+const fs = require('fs');
+const path = require('path');
 
 exports.handler = async (event, context) => {
-  // Use the URL of the image file served from the static directory
-  const pixelUrl = 'https://gleaming-jalebi-73344d.netlify.app/1x1.png';
+  const { queryStringParameters } = event;
+  const name = queryStringParameters ? queryStringParameters.name : "Unknown";
+
+  // Log the name (this can be saved in a database or just logged for now)
+  console.log(`Email opened by: ${name}`);
+
+  // The path to your tracking pixel image
+  const pixelPath = path.join(__dirname, '..', 'static', '1x1.png');
 
   try {
-    // Fetch the pixel image from the URL
-    const response = await fetch(pixelUrl);
-    
-    // Convert the response into an array buffer
-    const pixel = await response.arrayBuffer();
-    
-    console.log('Pixel requested from:', event.headers['user-agent']);
+    const pixelBuffer = fs.readFileSync(pixelPath);
 
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'image/png',
-        'Cache-Control': 'no-store', // Prevent caching
       },
-      body: Buffer.from(pixel).toString('base64'), // Return the pixel image as base64
-      isBase64Encoded: true, // Indicate it's base64-encoded
+      body: pixelBuffer.toString('base64'),
+      isBase64Encoded: true,
     };
-  } catch (error) {
-    console.error("Error fetching pixel:", error);
+  } catch (err) {
+    console.error("Error reading pixel file: ", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Failed to serve the tracking pixel." }),
+      body: JSON.stringify({ error: 'Failed to serve the tracking pixel.' }),
     };
   }
 };
